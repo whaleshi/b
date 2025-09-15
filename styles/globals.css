@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@config "../tailwind.config.js";
+
+html {
+    background-color: #1E1946;
+}
+
+body {
+    background-color: #1E1946;
+}
+
+/* 浮动动画 */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+.animate-float-1 {
+    animation: float 4s ease-in-out infinite;
+    animation-delay: 0s;
+}
+
+.animate-float-2 {
+    animation: float 4s ease-in-out infinite;
+    animation-delay: 1s;
+}
+
+.animate-float-3 {
+    animation: float 4s ease-in-out infinite;
+    animation-delay: 2s;
+}
+
+.animate-float-4 {
+    animation: float 4s ease-in-out infinite;
+    animation-delay: 3s;
+}
