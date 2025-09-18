@@ -1,8 +1,16 @@
 "use client"
 
-import { Image } from "@heroui/react";
+import { Image, Button } from "@heroui/react";
+import HomeList from "@/components/home/list";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+    const router = useRouter();
+
+    const handleCreateToken = () => {
+        router.push('/create');
+    };
+
     return (
         <div className="min-h-screen text-white" style={{ backgroundColor: '#1E1946' }}>
             {/* Main Content */}
@@ -50,43 +58,23 @@ export default function Home() {
                     </div>
                     <div className="absolute w-full flex justify-center gap-3 z-30 bottom-[55px]">
                         <a href="https://okay.fun" target="_blank" rel="noopener noreferrer">
-                            <button
+                            <Button
                                 className="w-[150px] h-[44px] rounded-[12px] text-[14px] text-[#FFF] cursor-pointer"
                                 style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
                             >
                                 体验 Okay.fun
-                            </button>
+                            </Button>
                         </a>
-                        <a
-                            href="https://twitter.com/intent/tweet?text=我已加入%20https://xboz.fun%20的等待列表，一起建设在%20@okaydotfun%20公平发射的%20$XBOZ%20🕶️%0Ahttps://okay.fun/details/0x9df0c82fb9f50a07b04c6e6d466b432dcd149595"
-                            target="_blank"
-                            rel="noopener noreferrer"
+                        <Button 
+                            className="w-[150px] h-[44px] rounded-[12px] text-[14px] text-[#0E0E0E] bg-[#FFF] cursor-pointer"
+                            onPress={handleCreateToken}
                         >
-                            <button className="w-[150px] h-[44px] rounded-[12px] text-[14px] text-[#0E0E0E] bg-[#FFF] cursor-pointer">
-                                加入等待列表
-                            </button>
-                        </a>
+                            创建代币
+                        </Button>
                     </div>
                 </div>
-                <div className="w-full max-w-[400px] px-[16px] mx-auto mb-[50px]">
-                    <div className="rounded-[12px] border border-white/20 bg-white/0">
-                        <div className="h-[52px] rounded-[12px] bg-white/5 flex items-center px-4 justify-between">
-                            <div className="flex items-center gap-2">
-                                <Image src="/images/home/token.png" className="w-[32px] h-[32px]" loading="eager" />
-                                <div className="text-[16px] text-[#fff] font-semibold">$XBOZ</div>
-                            </div>
-                            <a href="https://okoswap.com/?outAddr=0x9df0c82fb9f50a07b04c6e6d466b432dcd149595" target="_blank" rel="noopener noreferrer">
-                                <button className="w-[76px] h-[28px] rounded-[18px] bg-[#5D4FDC] text-[12px] text-white cursor-pointer">
-                                    立即购买
-                                </button>
-                            </a>
-                        </div>
-                        <div className="px-[16px] text-[12px] text-[#FFF] mt-[16px]">
-                            $XBOZ 是由 Okay.fun 的 CEO BOZ 在 Okay.fun 发出的实验代币。因 BOZ 被社区绑架，现由其本人发起 CTO。
-                        </div>
-                        <div className="px-[16px] text-[12px] text-[#FFF] mt-[8px]">“真正的 Meme 是流行文化而不是 PVP 游戏。”</div>
-                        <div className="px-[16px] text-[10px] text-[#FFF] mt-[12px] mb-[16px] text-right">—— Boz @0xBozwang</div>
-                    </div>
+                <div className="w-full max-w-[450px] px-[16px] mx-auto mb-[50px]">
+                    <HomeList />
                 </div>
             </main>
 

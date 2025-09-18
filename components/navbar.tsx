@@ -9,8 +9,14 @@ import {
 import NextLink from "next/link";
 import { useEffect, useState } from "react";
 
+import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { useAccount } from 'wagmi';
+
 export const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false);
+    const [mounted, setMounted] = useState(false);
+    const { openConnectModal } = useConnectModal();
+    const { address, isConnected } = useAccount();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -19,6 +25,11 @@ export const Navbar = () => {
 
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    // 标记已在客户端挂载，避免 SSR 与客户端地址状态不一致导致 hydration 警告
+    useEffect(() => {
+        setMounted(true);
     }, []);
 
     return (
@@ -47,22 +58,39 @@ export const Navbar = () => {
                 </NavbarBrand>
             </NavbarContent>
 
-            <NavbarContent className="basis-1/5 sm:basis-full" justify="end">
+            <NavbarContent className="basis-1/5 sm:basis-full gap-[10px]" justify="end">
                 <NavbarItem>
                     <NextLink href="https://x.com/bozdotfun" target="_blank" rel="noopener noreferrer" className="flex items-center">
-                        <img src="/images/home/x.png" alt="X" className="w-8 h-8" loading="eager" />
+                        <img src="/images/home/x.png" alt="X" className="w-[36px] h-[36px]" loading="eager" />
                     </NextLink>
                 </NavbarItem>
                 <NavbarItem>
                     <NextLink href="https://t.me/xbozdotfun" target="_blank" rel="noopener noreferrer" className="flex items-center">
-                        <img src="/images/home/tg.png" alt="Telegram" className="w-8 h-8" loading="eager" />
+                        <img src="/images/home/tg.png" alt="Telegram" className="w-[36px] h-[36px]" loading="eager" />
                     </NextLink>
                 </NavbarItem>
+                <NavbarItem suppressHydrationWarning>
+                    {!mounted ? (
+                        <div className="w-[96px] h-[36px] rounded-[12px] bg-[#2E2A55] animate-pulse" />
+                    ) : isConnected ? (
+                        <NextLink
+                            href="/user"
+                            className="px-3 h-[36px] rounded-[12px] bg-[#1E1946] text-[13px] text-white flex items-center justify-center border border-[#5D4FDC]/40 hover:border-[#5D4FDC] transition-colors max-w-[160px] cursor-pointer"
+                            title={address || ''}
+                        >
+                            <span className="truncate">{address?.slice(0, 6)}...{address?.slice(-4)}</span>
+                        </NextLink>
+                    ) : (
+                        <button
+                            type="button"
+                            className="w-[96px] h-[36px] rounded-[12px] bg-[#fff] active:scale-[0.97] text-[13px] font-medium text-[#001825] flex items-center justify-center transition-colors"
+                            onClick={() => openConnectModal && openConnectModal()}
+                        >
+                            连接钱包
+                        </button>
+                    )}
+                </NavbarItem>
             </NavbarContent>
-
-            <NavbarMenu>
-
-            </NavbarMenu>
         </HeroUINavbar>
     );
 };
