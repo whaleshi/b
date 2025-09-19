@@ -3,24 +3,67 @@
 import { Image } from "@heroui/react";
 import { useRouter } from "next/navigation";
 
+interface TokenMetadata {
+	address: string;
+	metadata: any;
+	name: string;
+	symbol: string;
+	description: string;
+	image: string | null;
+	website?: string;
+	x?: string;
+	telegram?: string;
+}
+
 interface ListItemProps {
+	tokenAddress?: string;
+	tokenMetadata?: TokenMetadata;
 	progress?: number; // 0-100
 }
 
-export default function ListItem({ progress = 10 }: ListItemProps) {
+export default function ListItem({ tokenAddress, tokenMetadata, progress = 10 }: ListItemProps) {
 	const router = useRouter();
 	const circumference = 248;
 	const strokeDashoffset = circumference - (progress / 100) * circumference;
 
 	const handleClick = () => {
-		router.push('/token/1');
+		if (tokenAddress) {
+			router.push(`/token/${tokenAddress}`);
+		}
 	};
 
+	// 如果没有 tokenAddress，显示默认样式
+	if (!tokenAddress) {
+		return (
+			<div className="h-[88px] w-full rounded-[12px] bg-[#29254F] px-[16px] flex items-center gap-[12px]">
+				<div className="w-[64px] h-[64px] bg-[#3a3560] rounded-[8px] animate-pulse"></div>
+				<div className="flex-1">
+					<div className="h-[14px] bg-[#3a3560] rounded w-[60px] mb-[8px] animate-pulse"></div>
+					<div className="h-[12px] bg-[#3a3560] rounded w-[200px] mb-[4px] animate-pulse"></div>
+					<div className="h-[12px] bg-[#3a3560] rounded w-[150px] animate-pulse"></div>
+				</div>
+			</div>
+		);
+	}
+
 	return (
-		<div className="h-[88px] w-full rounded-[12px] bg-[#29254F] px-[16px] flex items-center gap-[12px] cursor-pointer" onClick={handleClick}>
+		<div className="h-[88px] w-full rounded-[12px] bg-[#29254F] px-[16px] flex items-center gap-[12px] cursor-pointer mb-[10px]" onClick={handleClick}>
 			<div className="relative w-[64px] h-[64px]">
 				<div className="absolute top-[2px] left-[2px] right-[2px] bottom-[2px] border-[2px] border-[#29254F] rounded-[8px] z-10">
-					<Image src={"/images/home/m.png"} fallbackSrc="/images/common/default.png" className="w-[56px] h-[56px] rounded-[8px] border-[2px] border-[#29254F]" />
+					{/* 默认图片作为背景/loading */}
+					<Image
+						src="/images/common/default.png"
+						className="w-[56px] h-[56px] rounded-[8px] border-[2px] border-[#29254F] absolute"
+						disableSkeleton
+					/>
+					{/* 实际token图片 */}
+					{tokenMetadata?.image && (
+						<Image
+							src={tokenMetadata.image}
+							className="w-[56px] h-[56px] rounded-[8px] border-[2px] border-[#29254F] absolute z-10"
+							disableSkeleton
+						/>
+					)}
 				</div>
 				<svg className="absolute inset-0 w-full h-full z-20" viewBox="0 0 64 64">
 					<rect
@@ -51,11 +94,15 @@ export default function ListItem({ progress = 10 }: ListItemProps) {
 				</svg>
 			</div>
 			<div className="flex-1">
-				<div className="text-[14px] text-[#FFFFFF]">BOZ</div>
-				<div className="text-[12px] text-[#6A6784] my-[2px]">
-					MC <span className="text-[#fff]">$18.98K</span> 内盘 <span className="text-[#fff]">88.89%</span>
+				<div className="text-[14px] text-[#FFFFFF]">
+					{tokenMetadata?.symbol || `${tokenAddress?.slice(0, 6)}...${tokenAddress?.slice(-4)}`}
 				</div>
-				<div className="text-[12px] text-[#6A6784]">Item Description</div>
+				<div className="text-[12px] text-[#6A6784] my-[2px]">
+					MC <span className="text-[#fff]">$--</span> 内盘 <span className="text-[#fff]">{progress.toFixed(2)}%</span>
+				</div>
+				<div className="text-[12px] text-[#6A6784]">
+					{/* {tokenMetadata?.description || tokenMetadata?.name || 'Token Description'} */}
+				</div>
 			</div>
 		</div>
 	)
