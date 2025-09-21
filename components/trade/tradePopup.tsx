@@ -10,8 +10,11 @@ import { formatBigNumber } from '@/utils/formatBigNumber';
 import _bignumber from "bignumber.js";
 import { useSlippageStore } from "@/stores/useSlippageStore";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
-import { ethers } from "ethers";
-import { DEFAULT_CHAIN_CONFIG, CONTRACT_CONFIG } from "@/config/chains";
+import { readContract, getBalance } from "@wagmi/core";
+import { parseEther, formatEther } from "viem";
+import { CONTRACT_CONFIG } from "@/config/chains";
+import { config } from "@/config/wagmi";
+import contractABI from "@/constant/abi.json";
 
 interface TradeProps {
     isOpen?: boolean;
@@ -40,7 +43,7 @@ export default function Trade({ isOpen = false, onOpenChange, initialMode = true
     const { slippage } = useSlippageStore();
 
     // 如果没有传入balances，则自己查询余额
-    const { data: internalBalances, isLoading: balanceLoading } = useQuery({
+    const { data: currentBalances, isLoading: balanceLoading } = useQuery({
         queryKey: ['userBalances', tokenAddress, address],
         queryFn: async () => {
             if (!isConnected || !address) {
@@ -48,39 +51,46 @@ export default function Trade({ isOpen = false, onOpenChange, initialMode = true
             }
 
             try {
-                const provider = new ethers.JsonRpcProvider(DEFAULT_CHAIN_CONFIG.rpcUrl);
+                // 获取原生代币余额（OKB）
+                const walletBalance = await getBalance(config, {
+                    address: address as `0x${string}`,
+                });
+                let tokenBalance = BigInt(0);
 
-                // 同时获取OKB余额和代币余额
-                const promises = [
-                    // 获取OKB余额
-                    provider.getBalance(address)
-                ];
-
-                // 如果有代币地址，添加代币余额查询
+                // 如果有代币地址，获取代币余额
                 if (tokenAddress) {
-                    const tokenABI = ["function balanceOf(address owner) view returns (uint256)"];
-                    const tokenContract = new ethers.Contract(tokenAddress, tokenABI, provider);
-                    promises.push(tokenContract.balanceOf(address));
+                    const tokenABI = [
+                        {
+                            name: "balanceOf",
+                            type: "function",
+                            stateMutability: "view",
+                            inputs: [{ name: "owner", type: "address" }],
+                            outputs: [{ name: "", type: "uint256" }],
+                        },
+                    ];
+                    tokenBalance = await readContract(config, {
+                        address: tokenAddress as `0x${string}`,
+                        abi: tokenABI,
+                        functionName: "balanceOf",
+                        args: [address],
+                    }) as bigint;
                 }
 
-                const results = await Promise.all(promises);
-
                 return {
-                    walletBalance: ethers.formatEther(results[0]), // OKB余额
-                    tokenBalance: tokenAddress && results[1] ? ethers.formatEther(results[1]) : '0' // 代币余额
+                    walletBalance: formatEther(walletBalance.value), // OKB余额
+                    tokenBalance: formatEther(tokenBalance) // 代币余额
                 };
             } catch (error) {
+                console.log('Failed to fetch balances:', error);
                 return { tokenBalance: '0', walletBalance: '0' };
             }
         },
-        enabled: !!(isConnected && address && !balances), // 只有在没有传入balances且钱包连接时才查询
+        enabled: !!(isConnected && address), // 只有在没有传入balances且钱包连接时才查询
         refetchInterval: 3000, // 每3秒刷新一次余额
         staleTime: 2000, // 2秒内的数据认为是新鲜的
         retry: 2, // 失败时重试2次
     });
 
-    // 使用传入的balances或查询到的internalBalances
-    const currentBalances = balances || internalBalances;
 
     // 预估输出金额 - 当输入框有值时每3秒调用一次
     const { data: estimatedOutput } = useQuery({
@@ -91,20 +101,26 @@ export default function Trade({ isOpen = false, onOpenChange, initialMode = true
             }
 
             try {
-                const contractABI = (await import('@/constant/abi.json')).default;
-                const provider = new ethers.JsonRpcProvider(DEFAULT_CHAIN_CONFIG.rpcUrl);
-                const readOnlyContract = new ethers.Contract(CONTRACT_CONFIG.FACTORY_CONTRACT, contractABI, provider);
-
                 if (isBuy) {
                     // 调用 tryBuy 获取预期代币输出
-                    const result = await readOnlyContract.tryBuy(tokenAddress, ethers.parseEther(inputAmount));
+                    const result = await readContract(config, {
+                        address: CONTRACT_CONFIG.FACTORY_CONTRACT as `0x${string}`,
+                        abi: contractABI,
+                        functionName: "tryBuy",
+                        args: [tokenAddress, parseEther(inputAmount)],
+                    }) as any[];
                     const tokenAmountOut = result[0];
-                    return ethers.formatEther(tokenAmountOut);
+                    return formatEther(tokenAmountOut);
                 } else {
                     // 调用 trySell 获取预期ETH输出
-                    const sellAmount = ethers.parseEther(inputAmount);
-                    const result = await readOnlyContract.trySell(tokenAddress, sellAmount);
-                    return ethers.formatEther(result);
+                    const sellAmount = parseEther(inputAmount);
+                    const result = await readContract(config, {
+                        address: CONTRACT_CONFIG.FACTORY_CONTRACT as `0x${string}`,
+                        abi: contractABI,
+                        functionName: "trySell",
+                        args: [tokenAddress, sellAmount],
+                    }) as bigint;
+                    return formatEther(result);
                 }
             } catch (error) {
                 console.error('预估输出失败:', error);
@@ -132,8 +148,8 @@ export default function Trade({ isOpen = false, onOpenChange, initialMode = true
     ];
 
     const tabs = [
-        { id: true, label: "Buy" },
-        { id: false, label: "Sell" }
+        { id: true, label: "买入" },
+        { id: false, label: "卖出" }
     ];
 
     // 监听initialMode变化，在弹窗打开时设置对应的模式
@@ -170,9 +186,8 @@ export default function Trade({ isOpen = false, onOpenChange, initialMode = true
         }
 
         if (isBuy) {
-            // 买入时直接设置金额，确保不超过1
-            const finalAmount = Math.min(amount.value, 1);
-            setInputAmount(finalAmount.toString());
+            // 买入时直接设置金额
+            setInputAmount(amount.value.toString());
         } else {
             // 卖出时按百分比计算，基于实际的token余额，使用bignumber确保精度
             if (currentBalances?.tokenBalance && _bignumber(currentBalances?.tokenBalance).gt(0)) {
@@ -204,7 +219,7 @@ export default function Trade({ isOpen = false, onOpenChange, initialMode = true
 
         // 验证输入金额
         if (!inputAmount || parseFloat(inputAmount) <= 0) {
-            toast.error('Please enter a valid amount', { icon: null });
+            toast.error('请输入有效金额', { icon: null });
             return;
         }
 
@@ -215,11 +230,11 @@ export default function Trade({ isOpen = false, onOpenChange, initialMode = true
             const currentTokenAddress = tokenAddress as string;
 
             if (isBuy) {
-                const result = await handleBuy(currentTokenAddress, inputAmount);
-                toast.success(`Buy Successful`, { icon: null });
+                await handleBuy(currentTokenAddress, inputAmount);
+                toast.success(`买入成功`, { icon: null });
             } else {
-                const result = await handleSell(currentTokenAddress, inputAmount);
-                toast.success(`Sell Successful`, { icon: null });
+                await handleSell(currentTokenAddress, inputAmount);
+                toast.success(`卖出成功`, { icon: null });
             }
 
             await queryClient.invalidateQueries({
@@ -233,7 +248,7 @@ export default function Trade({ isOpen = false, onOpenChange, initialMode = true
             setInputAmount("");
             setOutputAmount("");
         } catch (error: any) {
-            toast.error(`${isBuy ? 'Launch Failed. Please Try Again' : 'Sell Failed. Please Try Again'}`, { icon: null });
+            toast.error(`${isBuy ? '买入失败，请重试' : '卖出失败，请重试'}`, { icon: null });
         } finally {
             setIsLoading(false);
         }
@@ -278,16 +293,7 @@ export default function Trade({ isOpen = false, onOpenChange, initialMode = true
                         const value = e.target.value;
                         // 只允许数字和小数点
                         if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                            if (isBuy) {
-                                // 买入时限制最大值为1
-                                const numValue = parseFloat(value);
-                                if (value === '' || (!isNaN(numValue) && numValue <= 2)) {
-                                    setInputAmount(value);
-                                }
-                            } else {
-                                // 卖出时不限制
-                                setInputAmount(value);
-                            }
+                            setInputAmount(value);
                         }
                     }}
                     onKeyDown={(e) => {
@@ -310,7 +316,7 @@ export default function Trade({ isOpen = false, onOpenChange, initialMode = true
                         fullWidth
                         className="bg-[rgba(255,255,255,0.05)] text-[#FFF] rounded-[12px] text-[12px]"
                         disabled={isLoading}
-                        onClick={() => handleAmountClick(amount)}
+                        onPress={() => handleAmountClick(amount)}
                     >
                         {amount.label}
                     </Button>
@@ -318,11 +324,11 @@ export default function Trade({ isOpen = false, onOpenChange, initialMode = true
             </div>
             <div className="flex items-center justify-end">
                 <span className="text-[#808C92] text-xs">
-                    Balaunce <i className="text-[#FFF]  not-italic">{isConnected ? formatBigNumber(isBuy ? currentBalances?.walletBalance : currentBalances?.tokenBalance) : '-'}</i>
+                    余额 <i className="text-[#FFF]  not-italic">{isConnected ? formatBigNumber(isBuy ? currentBalances?.walletBalance as string : currentBalances?.tokenBalance as string) : '-'}</i>
                 </span>
             </div>
             <div>
-                <div className="text-[16px] text-[#808C92] mb-[12px]">Receive</div>
+                <div className="text-[16px] text-[#808C92] mb-[12px]">预计获得</div>
                 <Input
                     classNames={{
                         inputWrapper:
@@ -346,19 +352,19 @@ export default function Trade({ isOpen = false, onOpenChange, initialMode = true
                 isLoading={isLoading}
                 onPress={handleTradeSubmit}
             >
-                {isLoading ? "Trading..." : !isConnected ? "Connect" : (isBuy ? "Buy" : "Sell")}
+                {isLoading ? "交易中..." : !isConnected ? "连接钱包" : (isBuy ? "立即买入" : "立即卖出")}
             </Button>
 
             <div className="p-4 bg-[rgba(255,255,255,0.05)] rounded-[12px]">
                 <div className="flex items-center justify-between text-[12px]">
-                    <span className="text-[#808C92]">Slippage</span>
+                    <span className="text-[#808C92]">滑点</span>
                     <span className="text-[#999]">
                         <span className="underline text-[#FFF]">{slippage}%</span>
                         <span
                             className="cursor-pointer text-[#808C92] ml-[4px]"
                             onClick={() => setIsSlippageOpen(true)}
                         >
-                            Setting
+                            设置
                         </span>
                     </span>
                 </div>
@@ -373,7 +379,7 @@ export default function Trade({ isOpen = false, onOpenChange, initialMode = true
             {embedded ? (
                 // 嵌入模式：直接显示内容，带背景卡片
                 <div className="bg-[rgba(255,255,255,0.03)] rounded-[20px] p-[24px] border border-[rgba(255,255,255,0.08)]">
-                    <h3 className="text-[18px] text-[#FFF] font-semibold mb-[20px]">Trade</h3>
+                    <h3 className="text-[18px] text-[#FFF] font-semibold mb-[20px]">交易</h3>
                     {tradeContent}
                 </div>
             ) : (

@@ -1,6 +1,12 @@
 import { useAccount } from "wagmi";
-import { readContract, writeContract, estimateGas, getGasPrice } from "@wagmi/core";
-import { parseEther } from "viem";
+import {
+    readContract,
+    writeContract,
+    estimateGas,
+    getGasPrice,
+    getBalance,
+} from "@wagmi/core";
+import { parseEther, formatEther } from "viem";
 import { CONTRACT_CONFIG } from "@/config/chains";
 import { useSlippageStore } from "@/stores/useSlippageStore";
 import { config } from "@/config/wagmi";
@@ -69,7 +75,19 @@ export const useTokenTrading = () => {
             minAmountOut.toString()
         );
 
-        // 3. 估算 gas limit
+        // 3. 检查钱包余额
+        const walletBalance = await getBalance(config, {
+            address: address as `0x${string}`,
+        });
+        
+        console.log("钱包余额:", formatEther(walletBalance.value), "OKB");
+        console.log("购买金额:", formatEther(amount), "OKB");
+        
+        if (walletBalance.value < amount) {
+            throw new Error(`Insufficient balance. You have ${formatEther(walletBalance.value)} OKB but trying to spend ${formatEther(amount)} OKB`);
+        }
+
+        // 4. 估算 gas limit
         let gasLimit;
         try {
             const estimatedGas = await estimateGas(config, {
@@ -84,18 +102,20 @@ export const useTokenTrading = () => {
             gasLimit = undefined;
         }
 
-        // 4. 获取 gas price
+        // 5. 获取 gas price
         const gasPrice = await getGasPrice(config);
-        const newGasPrice = gasPrice ? gasPrice + (gasPrice * BigInt(5)) / BigInt(100) : undefined; // +5%
-        
+        const newGasPrice = gasPrice
+            ? gasPrice + (gasPrice * BigInt(5)) / BigInt(100)
+            : undefined; // +5%
+
         console.log("Gas Price:", {
             original: gasPrice?.toString(),
             new: newGasPrice?.toString(),
         });
 
-        // 5. 执行买入交易
+        // 6. 执行买入交易
         console.log("发送 buyToken 交易...");
-        
+
         const buyResult = await writeContract(config, {
             address: CONTRACT_CONFIG.FACTORY_CONTRACT as `0x${string}`,
             abi: contractABI,
@@ -136,12 +156,12 @@ export const useTokenTrading = () => {
         ];
 
         // 1. 获取代币余额
-        const balance = await readContract(config, {
+        const balance = (await readContract(config, {
             address: tokenAddress as `0x${string}`,
             abi: tokenABI,
             functionName: "balanceOf",
             args: [address],
-        }) as bigint;
+        })) as bigint;
 
         console.log("代币余额:", balance.toString());
         console.log("要卖出的数量:", tokenAmount);
@@ -157,12 +177,12 @@ export const useTokenTrading = () => {
         }
 
         // 2. 调用 trySell 获取预期输出
-        const sellResult = await readContract(config, {
+        const sellResult = (await readContract(config, {
             address: CONTRACT_CONFIG.FACTORY_CONTRACT as `0x${string}`,
             abi: contractABI,
             functionName: "trySell",
             args: [tokenAddress, sellAmount],
-        }) as bigint;
+        })) as bigint;
 
         console.log("trySell 返回值:", sellResult);
         console.log("ETH Amount Out:", sellResult.toString());
@@ -170,25 +190,31 @@ export const useTokenTrading = () => {
         // 3. 计算滑点保护
         const ethAmountOut = sellResult;
         const slippageMultiplier = Math.floor(getSlippageMultiplier() * 100);
-        const minEthOut = (ethAmountOut * BigInt(slippageMultiplier)) / BigInt(100);
+        const minEthOut =
+            (ethAmountOut * BigInt(slippageMultiplier)) / BigInt(100);
 
         console.log(`使用滑点: ${slippage}%`);
-        console.log(`MinEthOut (with ${slippage}% slippage):`, minEthOut.toString());
+        console.log(
+            `MinEthOut (with ${slippage}% slippage):`,
+            minEthOut.toString()
+        );
 
         // 4. 检查和执行授权
-        const allowance = await readContract(config, {
+        const allowance = (await readContract(config, {
             address: tokenAddress as `0x${string}`,
             abi: tokenABI,
             functionName: "allowance",
             args: [address, CONTRACT_CONFIG.FACTORY_CONTRACT],
-        }) as bigint;
+        })) as bigint;
 
         console.log("当前授权额度:", allowance.toString());
 
         // 获取 gas price
         const gasPrice = await getGasPrice(config);
-        const newGasPrice = gasPrice ? gasPrice + (gasPrice * BigInt(5)) / BigInt(100) : undefined; // +5%
-        
+        const newGasPrice = gasPrice
+            ? gasPrice + (gasPrice * BigInt(5)) / BigInt(100)
+            : undefined; // +5%
+
         console.log("Gas Price:", {
             original: gasPrice?.toString(),
             new: newGasPrice?.toString(),
@@ -207,7 +233,10 @@ export const useTokenTrading = () => {
                     data: `0x`, // approve 函数调用数据
                 });
                 approveGasLimit = (estimatedGas * BigInt(120)) / BigInt(100); // +20% buffer
-                console.log("Approve 预估 Gas Limit:", approveGasLimit.toString());
+                console.log(
+                    "Approve 预估 Gas Limit:",
+                    approveGasLimit.toString()
+                );
             } catch (e) {
                 console.warn("Approve Gas 估算失败:", e);
                 approveGasLimit = undefined;
@@ -217,7 +246,12 @@ export const useTokenTrading = () => {
                 address: tokenAddress as `0x${string}`,
                 abi: tokenABI,
                 functionName: "approve",
-                args: [CONTRACT_CONFIG.FACTORY_CONTRACT, BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")],
+                args: [
+                    CONTRACT_CONFIG.FACTORY_CONTRACT,
+                    BigInt(
+                        "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+                    ),
+                ],
                 gas: approveGasLimit,
                 gasPrice: newGasPrice,
                 type: "legacy" as const,

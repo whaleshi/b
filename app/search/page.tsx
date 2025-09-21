@@ -45,7 +45,7 @@ export default function Search() {
 
 	return (
 		<section className="flex flex-col items-center justify-center pt-[56px] px-[16px] max-w-[450px] mx-auto">
-			<div className="relative w-full">
+			<div className="relative w-full mt-[16px]">
 				<Input
 					classNames={{
 						inputWrapper: "h-[48px] rounded-[12px] border-0 bg-[rgba(255,255,255,0.05)]",

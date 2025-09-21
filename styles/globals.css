@@ -3,16 +3,17 @@
 @config "../tailwind.config.js";
 
 html {
-    background-color: #1E1946;
+    background-color: #1e1946;
 }
 
 body {
-    background-color: #1E1946;
+    background-color: #1e1946;
 }
 
 /* 浮动动画 */
 @keyframes float {
-    0%, 100% {
+    0%,
+    100% {
         transform: translateY(0px);
     }
     50% {
@@ -38,4 +39,30 @@ body {
 .animate-float-4 {
     animation: float 4s ease-in-out infinite;
     animation-delay: 3s;
+}
+
+.toast-success {
+    border: none !important;
+    background-color: #29254f !important;
+    color: #0f9 !important;
+    height: 48px !important;
+    font-size: 13px !important;
+    text-align: center !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 12px !important;
+}
+
+.toast-error {
+    border: none !important;
+    background-color: #29254f !important;
+    color: #ee2e76 !important;
+    height: 48px !important;
+    font-size: 13px !important;
+    text-align: center !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 12px !important;
 }

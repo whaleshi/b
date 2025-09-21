@@ -19,7 +19,7 @@ interface TokenDetailClientProps {
 
 export default function TokenDetailClient({ address }: TokenDetailClientProps) {
 	const [tokenMetadata, setTokenMetadata] = useState<any>(null);
-	
+
 	// 获取 token 链上数据（3秒轮询）
 	const { data: tokenData, isLoading, error } = useQuery({
 		queryKey: ['tokenDetail', address],
@@ -43,7 +43,7 @@ export default function TokenDetailClient({ address }: TokenDetailClientProps) {
 
 				const tokenInfo = {
 					base: tokenInfoResult[0],
-					quote: tokenInfoResult[1], 
+					quote: tokenInfoResult[1],
 					reserve0: tokenInfoResult[2],
 					reserve1: tokenInfoResult[3],
 					vReserve0: tokenInfoResult[4],
@@ -121,6 +121,7 @@ export default function TokenDetailClient({ address }: TokenDetailClientProps) {
 			}
 
 			const metadata = await response.json();
+			console.log(metadata)
 			setTokenMetadata({
 				name: metadata.name || `Token ${address.slice(0, 6)}...${address.slice(-4)}`,
 				symbol: metadata.symbol || 'UNKNOWN',
@@ -153,11 +154,11 @@ export default function TokenDetailClient({ address }: TokenDetailClientProps) {
 		return (
 			<div className="w-full max-w-[450px] h-full pt-[56px] px-[16px]">
 				<div className="min-h-[calc(100vh-56px)] flex flex-col items-center justify-center">
-					<Image 
-						src="/images/home/tab3.png" 
-						className="w-[80px] h-[80px] animate-bounce" 
-						disableSkeleton 
-						loading="eager" 
+					<Image
+						src="/images/home/tab3.png"
+						className="w-[80px] h-[80px] animate-bounce"
+						disableSkeleton
+						loading="eager"
 					/>
 					<div className="text-[12px] text-[#6A6784] mt-[10px]">加载代币信息中...</div>
 				</div>
@@ -170,11 +171,11 @@ export default function TokenDetailClient({ address }: TokenDetailClientProps) {
 		return (
 			<div className="w-full max-w-[450px] h-full pt-[56px] px-[16px]">
 				<div className="min-h-[calc(100vh-56px)] flex flex-col items-center justify-center">
-					<Image 
-						src="/images/home/search.png" 
-						className="w-[80px] h-[80px] !opacity-30" 
-						disableSkeleton 
-						loading="eager" 
+					<Image
+						src="/images/home/search.png"
+						className="w-[80px] h-[80px] !opacity-30"
+						disableSkeleton
+						loading="eager"
 					/>
 					<div className="text-[14px] text-[#fff] mt-[16px] mb-[8px]">加载失败</div>
 					<div className="text-[12px] text-[#6A6784] text-center">
@@ -193,6 +194,9 @@ export default function TokenDetailClient({ address }: TokenDetailClientProps) {
 		description: tokenMetadata?.description || 'Token Description',
 		image: tokenMetadata?.image || '/images/common/default.png',
 		tokenImage: tokenMetadata?.image || '/images/common/default.png',
+		website: tokenMetadata?.website || '',
+		x: tokenMetadata?.x || '',
+		telegram: tokenMetadata?.telegram || ''
 	};
 
 	return (

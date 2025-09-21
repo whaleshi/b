@@ -37,6 +37,7 @@ function AvatarField({
 	name = "avatar",
 	maxMB = MAX_AVATAR_MB,
 	loading = false,
+	clearInput,
 }: {
 	valueUrl: string | null;
 	onPick: (file?: File) => void;
@@ -45,11 +46,21 @@ function AvatarField({
 	name?: string;
 	maxMB?: number;
 	loading?: boolean;
+	clearInput?: React.Ref<{ clearFileInput: () => void }>;
 }) {
 	const inputId = "avatar-upload-input";
 	const labelId = "avatar-upload-label";
 	const wrapperRef = React.useRef<HTMLDivElement>(null);
+	const fileInputRef = React.useRef<HTMLInputElement>(null);
 	const [errorText, setErrorText] = React.useState<string | null>(null);
+
+	React.useImperativeHandle(clearInput, () => ({
+		clearFileInput: () => {
+			if (fileInputRef.current) {
+				fileInputRef.current.value = '';
+			}
+		}
+	}), []);
 
 	const setError = (msg: string | null) => {
 		setErrorText(msg);
@@ -100,7 +111,7 @@ function AvatarField({
 					htmlFor={inputId}
 					className={["text-[14px] text-[#808C92] font-normal", errorText && "text-[#f31260]"].join(" ")}
 				>
-					Icon
+					图标
 					{required ? <span className="text-[#f31260] ml-[2px]">*</span> : null}
 				</label>
 			</div>
@@ -161,6 +172,7 @@ export default function CreateForm() {
 	const [avatarError, setAvatarError] = useState<string | null>(null);
 	const [uploadLoading, setUploadLoading] = useState(false);
 	const [ipfsHash, setIpfsHash] = useState<string | null>(null);
+	const avatarFieldRef = React.useRef<{ clearFileInput: () => void }>(null);
 	const [createLoading, setCreateLoading] = useState(false);
 	const [descriptionVal, setDescriptionVal] = useState("");
 	const [websiteVal, setWebsiteVal] = useState("");
@@ -206,9 +218,14 @@ export default function CreateForm() {
 			if (res) {
 				setIpfsHash(res);
 				setAvatarFile(file);
+			} else {
+				toast.error('上传失败, 请稍后再试', { icon: null });
+				avatarFieldRef.current?.clearFileInput();
 			}
 		} catch (error) {
 			console.error("IPFS upload error:", error);
+			toast.error('上传失败, 请稍后再试', { icon: null });
+			avatarFieldRef.current?.clearFileInput();
 		} finally {
 			setUploadLoading(false);
 		}
@@ -274,7 +291,7 @@ export default function CreateForm() {
 			console.log("账户余额:", ethers.formatEther(balance), "OKB");
 
 			if (balance === BigInt(0)) {
-				toast.error('Insufficient balance', { icon: null });
+				toast.error('余额不足', { icon: null });
 				return null;
 			}
 
@@ -370,7 +387,7 @@ export default function CreateForm() {
 
 		// 检查是否有头像的 IPFS hash
 		if (!ipfsHash) {
-			toast.error('Icon upload failed. Please try again', { icon: null });
+			toast.error('图标上传失败，请重试', { icon: null });
 			return;
 		}
 
@@ -392,11 +409,11 @@ export default function CreateForm() {
 
 			setCreatedTokenAddress(tokenAddress as string);
 			onOpen();
-			toast.success('Created successfully', { icon: null });
+			toast.success('创建成功', { icon: null });
 		} catch (error: any) {
 			console.error("Create error:", error);
 
-			toast.error('Create failed. Please try again', { icon: null })
+			toast.error('创建失败，请重试', { icon: null })
 		} finally {
 			setCreateLoading(false);
 		}
@@ -412,6 +429,7 @@ export default function CreateForm() {
 					onClear={onClearAvatar}
 					required
 					loading={uploadLoading}
+					clearInput={avatarFieldRef}
 				/>
 
 				{/* 基本信息 */}
@@ -421,11 +439,11 @@ export default function CreateForm() {
 						input: "f600 text-[14px] text-[#fff] placeholder:text-[#808C92]",
 					}}
 					isRequired
-					errorMessage='Please enter name'
-					label={<span className="text-[14px] text-[#808C92]">Name</span>}
+					errorMessage='请输入名称'
+					label={<span className="text-[14px] text-[#808C92]">名称</span>}
 					labelPlacement="outside-top"
 					name="name"
-					placeholder='Name'
+					placeholder='名称'
 					variant="bordered"
 					value={nameVal}
 					onChange={(e) => setNameVal(e.target.value)}
@@ -439,7 +457,7 @@ export default function CreateForm() {
 						input: "f600 text-[14px] text-[#fff] placeholder:text-[#808C92]",
 					}}
 					isRequired
-					errorMessage='Please enter ticker'
+					errorMessage='请输入 Ticker'
 					label={<span className="text-[14px] text-[#808C92]">Ticker</span>}
 					labelPlacement="outside-top"
 					name="ticker"
@@ -459,12 +477,12 @@ export default function CreateForm() {
 					}}
 					label={
 						<div className="flex items-center">
-							<span className="text-[14px] text-[#808C92]">Description</span>
-							<span className="text-[#999] pl-[4px] text-[12px]">(Optional)</span>
+							<span className="text-[14px] text-[#808C92]">描述</span>
+							<span className="text-[#999] pl-[4px] text-[12px]">(可选)</span>
 						</div>
 					}
 					labelPlacement="outside"
-					placeholder="Description"
+					placeholder="描述"
 					variant="bordered"
 					name="description"
 					aria-label="Description"
@@ -481,8 +499,8 @@ export default function CreateForm() {
 					}}
 					label={
 						<div className="flex items-center">
-							<span className="text-[14px] text-[#808C92]">Buy in Advance</span>
-							<span className="text-[#999] pl-[4px] text-[12px]">(Optional)</span>
+							<span className="text-[14px] text-[#808C92]">提前买入</span>
+							<span className="text-[#999] pl-[4px] text-[12px]">(可选)</span>
 						</div>
 					}
 					labelPlacement="outside-top"
@@ -497,11 +515,7 @@ export default function CreateForm() {
 						const value = e.target.value;
 						// 只允许数字和小数点
 						if (value === '' || /^\d*\.?\d*$/.test(value)) {
-							const numValue = parseFloat(value);
-							// 限制最大值为1，NaN表示空字符串或无效输入
-							if (value === '' || (!isNaN(numValue) && numValue <= 1)) {
-								setPreBuyVal(value);
-							}
+							setPreBuyVal(value);
 						}
 					}}
 					onKeyDown={(e) => {
@@ -522,13 +536,13 @@ export default function CreateForm() {
 					}}
 					label={
 						<div className="flex items-center">
-							<span className="text-[14px] text-[#808C92]">Website</span>
-							<span className="text-[#999] pl-[4px] text-[12px]">(Optional)</span>
+							<span className="text-[14px] text-[#808C92]">网站</span>
+							<span className="text-[#999] pl-[4px] text-[12px]">(可选)</span>
 						</div>
 					}
 					labelPlacement="outside-top"
 					name="website"
-					placeholder="Website"
+					placeholder="网站"
 					variant="bordered"
 					type="url"
 					aria-label="Website"
@@ -544,7 +558,7 @@ export default function CreateForm() {
 					label={
 						<div className="flex items-center">
 							<span className="text-[14px] text-[#808C92]">X</span>
-							<span className="text-[#999] pl-[4px] text-[12px]">(Optional)</span>
+							<span className="text-[#999] pl-[4px] text-[12px]">(可选)</span>
 						</div>
 					}
 					labelPlacement="outside-top"
@@ -565,7 +579,7 @@ export default function CreateForm() {
 					label={
 						<div className="flex items-center">
 							<span className="text-[14px] text-[#808C92]">Telegram</span>
-							<span className="text-[#999] pl-[4px] text-[12px]">(Optional)</span>
+							<span className="text-[#999] pl-[4px] text-[12px]">(可选)</span>
 						</div>
 					}
 					labelPlacement="outside-top"
@@ -588,7 +602,7 @@ export default function CreateForm() {
 					isLoading={createLoading}
 					disabled={createLoading || !readyToSubmit}
 				>
-					{!isConnected ? "Connect" : "Launch"}
+					{!isConnected ? "连接钱包" : "立即创建"}
 				</Button>
 				{/* <div className="" onClick={() => { onOpen() }}>1</div> */}
 			</Form>
@@ -617,7 +631,7 @@ export default function CreateForm() {
 							copy(`https://bgbs.fun/token/${createdTokenAddress}`);
 						}}
 					>
-						Copy Link
+						复制链接
 					</Button>
 					<Button
 						fullWidth
@@ -628,7 +642,7 @@ export default function CreateForm() {
 							window.open(url, "_blank");
 						}}
 					>
-						Share to X
+						分享到 X
 					</Button>
 				</div>
 			</ResponsiveDialog>

@@ -1,6 +1,7 @@
 import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
 import clsx from "clsx";
+import { Toaster } from "sonner";
 
 import { HeroUIProviderWrapper } from "@/providers";
 
@@ -52,6 +53,24 @@ export default function RootLayout({
                             {children}
                         </main>
                     </div>
+                    <Toaster
+                        position="top-center"
+                        toastOptions={{
+                            style: {
+                                height: '48px',
+                                fontSize: '13px',
+                                textAlign: 'center',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderRadius: '0px',
+                            },
+                            classNames: {
+                                success: 'toast-success',
+                                error: 'toast-error',
+                            },
+                        }}
+                    />
                 </HeroUIProviderWrapper>
             </body>
         </html>

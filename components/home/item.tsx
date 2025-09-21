@@ -103,6 +103,29 @@ export default function ListItem({ tokenAddress, tokenMetadata, progress = 10 }:
 				<div className="text-[12px] text-[#6A6784]">
 					{/* {tokenMetadata?.description || tokenMetadata?.name || 'Token Description'} */}
 				</div>
+				<div className="flex items-center gap-[4px]">
+					{
+						tokenMetadata?.website && <div className="w-[20px] h-[20px] flex items-center justify-center cursor-pointer"
+							onClick={(e) => { e.stopPropagation(); window.open(tokenMetadata?.website, "_blank") }}
+						>
+							<Image src="/images/common/web.png" className="w-[12px] h-auto rounded-[0px]" disableSkeleton loading="eager" />
+						</div>
+					}
+					{
+						tokenMetadata?.x && <div className="w-[20px] h-[20px] flex items-center justify-center cursor-pointer"
+							onClick={(e) => { e.stopPropagation(); window.open(tokenMetadata?.x, "_blank") }}
+						>
+							<Image src="/images/common/x.png" className="w-[12px] h-auto rounded-[0px]" disableSkeleton loading="eager" />
+						</div>
+					}
+					{
+						tokenMetadata?.telegram && <div className="w-[20px] h-[20px] flex items-center justify-center cursor-pointer"
+							onClick={(e) => { e.stopPropagation(); window.open(tokenMetadata?.telegram, "_blank") }}
+						>
+							<Image src="/images/common/tg.png" className="w-[12px] h-auto rounded-[0px] mt-[2px]" disableSkeleton loading="eager" />
+						</div>
+					}
+				</div>
 			</div>
 		</div>
 	)

@@ -38,14 +38,17 @@ export default function useClipboard(timeout = 1500) {
                     if (!successful) throw new Error("Copy command failed");
                 }
                 setIsCopied(true);
-                toast.success("Copy Successful", { icon: null });
+                toast.success("复制成功", { icon: null });
                 clearTimer();
-                timerRef.current = window.setTimeout(() => setIsCopied(false), timeout);
+                timerRef.current = window.setTimeout(
+                    () => setIsCopied(false),
+                    timeout
+                );
                 return true;
             } catch (e: any) {
-                setError(e?.message || "Copy failed");
+                setError(e?.message || "复制失败");
                 setIsCopied(false);
-                toast.error("Copy failed", { icon: null });
+                toast.error("复制失败", { icon: null });
                 return false;
             }
         },

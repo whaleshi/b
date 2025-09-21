@@ -41,10 +41,10 @@ export default function Slippage({ isOpen = false, onOpenChange }: SlippageProps
             onOpenChange={onOpenChange ?? (() => { })}
             maxVH={70}
             size="md"
-            title="Setting"
+            title="设置"
         >
             <div className="text-base text-[#FFF] pb-[5px]">
-                Slippage Tolerance
+                设置滑点
             </div>
             <div className="flex items-center justify-between gap-[12px] mb-[16px]">
                 {slippageOptions.map((option) => (
@@ -103,26 +103,26 @@ export default function Slippage({ isOpen = false, onOpenChange }: SlippageProps
                             // 使用自定义滑点
                             const customValue = parseFloat(customSlippage);
                             if (isNaN(customValue) || customValue <= 0) {
-                                toast.error('Please enter a valid slippage value', { icon: null });
+                                toast.error('请输入有效的滑点值', { icon: null });
                                 return;
                             }
                             if (customValue > 50) {
-                                toast.error('Slippage cannot exceed 50%', { icon: null });
+                                toast.error('滑点不能超过50%', { icon: null });
                                 return;
                             }
                             newSlippage = customValue;
                         } else {
-                            toast.error('Please select or enter a slippage value', { icon: null });
+                            toast.error('请选择或输入滑点值', { icon: null });
                             return;
                         }
 
                         // 保存滑点设置到store
                         setSlippage(newSlippage);
-                        toast.success(`Slippage has been set to ${newSlippage}%`, { icon: null });
+                        toast.success(`滑点已设置为 ${newSlippage}%`, { icon: null });
                         onOpenChange?.(false);
                     }}
                 >
-                    Save
+                    保存
                 </Button>
             </div>
         </ResponsiveDialog>
