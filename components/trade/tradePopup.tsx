@@ -335,7 +335,6 @@ export default function Trade({ isOpen = false, onOpenChange, initialMode = true
                             "px-[18px] py-3.5 bg-[rgba(255,255,255,0.05)] border-0 rounded-[12px] h-[52]",
                         input: "text-[14px] text-[#fff] placeholder:text-[#999]",
                     }}
-                    labelPlacement="outside"
                     placeholder="0.00"
                     variant="bordered"
                     value={outputAmount}

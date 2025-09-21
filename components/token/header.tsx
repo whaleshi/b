@@ -19,7 +19,7 @@ export default function TokenHeader({ data }: any) {
 			<ResponsiveDialog
 				isOpen={isOpen}
 				onOpenChange={onOpenChange}
-				title='Share Token'
+				title='分享代币'
 				maxVH={70}
 				size="md"
 				classNames={{ body: "text-[#fff]" }}
@@ -42,7 +42,7 @@ export default function TokenHeader({ data }: any) {
 							copy(`https://bgbs.fun/token/${data?.tokenAddress}`);
 						}}
 					>
-						Copy Link
+						复制链接
 					</Button>
 					<Button
 						fullWidth
@@ -53,7 +53,7 @@ export default function TokenHeader({ data }: any) {
 							window.open(url, "_blank");
 						}}
 					>
-						Share to X
+						分享到 X
 					</Button>
 				</div>
 			</ResponsiveDialog>
