@@ -54,14 +54,9 @@ export const useTokenList = () => {
     }>({});
     const fetchedTokens = useRef(new Set<string>());
 
-    // 获取合约数据
-    const {
-        data: contractData,
-        isLoading,
-        isFetching,
-        error,
-    } = useQuery({
-        queryKey: ["tokenContractData"],
+    // 先获取 tokenCount
+    const { data: tokenCountData } = useQuery({
+        queryKey: ["tokenCount"],
         queryFn: async () => {
             console.log("Calling allTokens method...");
             const count = (await readContract(config, {
@@ -72,6 +67,30 @@ export const useTokenList = () => {
 
             const tokenCount = Number(count);
             console.log("Token count from allTokens:", tokenCount);
+            return tokenCount;
+        },
+        refetchInterval: 3000,
+        staleTime: 0,
+        gcTime: 30000,
+        placeholderData: (previousData) => previousData,
+        retry: 3,
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+        networkMode: "online",
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: true,
+    });
+
+    // 只有当 tokenCount 变化时才获取完整的合约数据
+    const {
+        data: contractData,
+        isLoading,
+        isFetching,
+        error,
+    } = useQuery({
+        queryKey: ["tokenContractData", tokenCountData],
+        queryFn: async () => {
+            const tokenCount = tokenCountData || 0;
+            console.log("Fetching full token data for count:", tokenCount);
 
             if (tokenCount === 0) {
                 return { tokenCount: 0, tokens: [] };
@@ -258,9 +277,9 @@ export const useTokenList = () => {
 
             return { tokenCount, tokens };
         },
-        refetchInterval: 3000, // 3秒轮询
-        staleTime: 0,
-        gcTime: 30000,
+        enabled: !!(tokenCountData && tokenCountData > 0), // 只有当有 tokenCount 且大于0时才执行
+        staleTime: 60000, // 60秒内数据新鲜
+        gcTime: 300000, // 5分钟缓存
         placeholderData: (previousData) => previousData,
         retry: 3,
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
