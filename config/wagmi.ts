@@ -23,7 +23,6 @@ export const config = createConfig({
     connectors: [injected({ shimDisconnect: true })],
     transports: {
         [xLayer.id]: http(),
-        // [customNetwork.id]: http("http://43.160.204.41:8545"),
     },
     ssr: false,
 });
