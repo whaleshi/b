@@ -97,7 +97,7 @@ export default function ListItem({ tokenAddress, tokenMetadata, progress = 10 }:
 			</div>
 			<div className="flex-1">
 				<div className="text-[14px] text-[#FFFFFF]">
-					{tokenMetadata?.symbol || `${tokenAddress?.slice(0, 6)}...${tokenAddress?.slice(-4)}`}
+					{tokenMetadata?.symbol || `--`}
 				</div>
 				<div className="text-[12px] text-[#6A6784] my-[2px]">
 					MC <span className="text-[#fff]">$--</span> 内盘 <span className="text-[#fff]">{progress.toFixed(2)}%</span>

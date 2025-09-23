@@ -55,27 +55,29 @@ export default function TokenTrade({ data }: any) {
 
 	return (
 		<div className="w-full select-none flex-1 flex flex-col justify-end pb-[30px] gap-[12px]">
-			{hasTokens && (
-				<Button
-					className="h-[48px] rounded-[12px] bg-[#ff4444] text-[14px] text-white"
+			<div className="flex w-full gap-[12px]">
+				{hasTokens && (
+					<Button
+						className="flex-1 h-[48px] rounded-[12px] bg-[#29254F] text-[14px] text-white"
+						onPress={() => {
+							setTradeMode(false); // 设置为卖出模式
+							setIsTradePopupOpen(true);
+						}}
+					>
+						<Image src="/images/common/sell.png" className="w-[20px] h-[20px]" disableSkeleton loading="eager" />
+						立即卖出
+					</Button>
+				)}
+				<Button className="flex-1 h-[48px] rounded-[12px] bg-[#fff] text-[14px]"
 					onPress={() => {
-						setTradeMode(false); // 设置为卖出模式
+						setTradeMode(true); // 设置为买入模式
 						setIsTradePopupOpen(true);
 					}}
 				>
 					<Image src="/images/home/tab3.png" className="w-[20px] h-[20px]" disableSkeleton loading="eager" />
-					立即卖出
+					立即买入
 				</Button>
-			)}
-			<Button className="h-[48px] rounded-[12px] bg-[#fff] text-[14px]"
-				onPress={() => {
-					setTradeMode(true); // 设置为买入模式
-					setIsTradePopupOpen(true);
-				}}
-			>
-				<Image src="/images/home/tab3.png" className="w-[20px] h-[20px]" disableSkeleton loading="eager" />
-				立即买入
-			</Button>
+			</div>
 			<TradePopup
 				isOpen={isTradePopupOpen}
 				onOpenChange={setIsTradePopupOpen}

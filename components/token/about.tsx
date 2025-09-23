@@ -1,11 +1,13 @@
 "use client"
 
 import { Image } from "@heroui/react";
+import useClipboard from '@/hooks/useClipboard';
 
 export default function TokenAbout({ data }: any) {
 	const circumference = 248;
 	const strokeDashoffset = circumference - (data?.progress / 100) * circumference;
 	console.log(data)
+	const { copy } = useClipboard();
 	return (
 		<div>
 			<div className="h-[64px] w-full flex items-center gap-[12px]">
@@ -58,7 +60,8 @@ export default function TokenAbout({ data }: any) {
 					<div className="text-[12px] text-[#6A6784] flex items-center justify-between">
 						{data?.name} <span>市值</span>
 					</div>
-					<div className="text-[12px] text-[#6A6784] flex items-center justify-between"><div></div><div>CA<span className="text-[#fff] underline mx-[4px] cursor-pointer" onClick={() => { window.open(`https://www.oklink.com/x-layer/address/${data?.address}`, "_blank") }}>{data?.address?.slice(0, 6)}...{data?.address?.slice(-4)}</span><span className="cursor-pointer">复制</span></div></div>
+					<div className="text-[12px] text-[#6A6784] flex items-center justify-between"><div></div><div>CA<span className="text-[#fff] underline mx-[4px] cursor-pointer" onClick={() => { window.open(`https://www.oklink.com/x-layer/address/${data?.address}`, "_blank") }}>{data?.address?.slice(0, 6)}...{data?.address?.slice(-4)}</span><span className="cursor-pointer"
+						onClick={() => copy(data?.address!)}>复制</span></div></div>
 				</div>
 			</div>
 			<div className="flex mt-[24px] gap-[12px]">
