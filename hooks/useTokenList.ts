@@ -156,8 +156,9 @@ export const useTokenList = () => {
                 "0x2f4AbA8A2C5B05eBEde0f1A4bC6BDEA9d033b00C",
                 "0x4cF7dEE78f01Af5ba6581A2B7A4b825E6F9d1c9f",
                 "0xEf53B53EC0b02470C60Aa5C800318156E9Db769A",
+                "0x2BbB731BECB67d4201e63fF42805c730032E90a8",
             ];
-            
+
             const validAddresses = addresses.filter(
                 (addr) => addr && addr !== "" && !blacklist.includes(addr)
             );
