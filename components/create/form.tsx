@@ -653,7 +653,7 @@ export default function CreateForm() {
 						fullWidth
 						className="text-[14px] bg-[#fff] text-[#101010] h-[48px] my-[12px] rounded-[12px]"
 						onPress={() => {
-							const text = `https://bgbs.fun/token/${createdTokenAddress}`
+							const text = `https://xboz.fun/token/${createdTokenAddress}`
 							const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
 							window.open(url, "_blank");
 						}}

@@ -100,7 +100,8 @@ export default function ListItem({ tokenAddress, tokenMetadata, progress = 10 }:
 					{tokenMetadata?.symbol || `--`}
 				</div>
 				<div className="text-[12px] text-[#6A6784] my-[2px]">
-					MC <span className="text-[#fff]">$--</span> 内盘 <span className="text-[#fff]">{progress.toFixed(2)}%</span>
+					{/* MC <span className="text-[#fff]">$--</span> */}
+					内盘 <span className="text-[#fff]">{progress.toFixed(2)}%</span>
 				</div>
 				<div className="flex items-center gap-[4px]">
 					{

@@ -39,7 +39,7 @@ export default function TokenHeader({ data }: any) {
 						fullWidth
 						className="text-[14px] rounded-[12px] text-[#fff] bg-[#29254F] h-[48px] mt-[22px]"
 						onPress={() => {
-							copy(`https://bgbs.fun/token/${data?.tokenAddress}`);
+							copy(`https://bgbs.fun/token/${data?.address}`);
 						}}
 					>
 						复制链接
@@ -48,7 +48,7 @@ export default function TokenHeader({ data }: any) {
 						fullWidth
 						className="text-[14px] rounded-[12px] bg-[#fff] text-[#101010] h-[48px] my-[12px]"
 						onPress={() => {
-							const text = `https://bgbs.fun/token/${data?.tokenAddress}`
+							const text = `https://xboz.fun/token/${data?.address}`
 							const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
 							window.open(url, "_blank");
 						}}

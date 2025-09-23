@@ -81,7 +81,7 @@ export default function TokenDetailClient({ address }: TokenDetailClientProps) {
 					beneficiary: tokenInfo.creator || 'Unknown',
 					participants: 0,
 					launched: tokenInfo.launched,
-					lastPrice: tokenInfo.lastPrice ? Number(tokenInfo.lastPrice) / 1e18 : 0,
+					lastPrice: tokenInfo.lastPrice ? tokenInfo.lastPrice : 0,
 					info: tokenInfo,
 				};
 			} catch (error) {
