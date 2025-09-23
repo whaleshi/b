@@ -80,14 +80,14 @@ export const useTokenList = () => {
         refetchOnReconnect: true,
     });
 
-    // 只有当 tokenCount 变化时才获取完整的合约数据
+    // 每3秒获取完整的合约数据
     const {
         data: contractData,
         isLoading,
         isFetching,
         error,
     } = useQuery({
-        queryKey: ["tokenContractData", tokenCountData],
+        queryKey: ["tokenContractData"],
         queryFn: async () => {
             const tokenCount = tokenCountData || 0;
             console.log("Fetching full token data for count:", tokenCount);
@@ -279,8 +279,9 @@ export const useTokenList = () => {
             return { tokenCount, tokens };
         },
         enabled: !!(tokenCountData && tokenCountData > 0), // 只有当有 tokenCount 且大于0时才执行
-        staleTime: 60000, // 60秒内数据新鲜
-        gcTime: 300000, // 5分钟缓存
+        refetchInterval: 3000, // 每3秒刷新一次
+        staleTime: 0, // 数据立即过期
+        gcTime: 30000, // 30秒缓存
         placeholderData: (previousData) => previousData,
         retry: 3,
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
