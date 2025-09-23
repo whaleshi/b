@@ -39,7 +39,7 @@ export default function TokenHeader({ data }: any) {
 						fullWidth
 						className="text-[14px] rounded-[12px] text-[#fff] bg-[#29254F] h-[48px] mt-[22px]"
 						onPress={() => {
-							copy(`https://bgbs.fun/token/${data?.address}`);
+							copy(`https://xboz.fun/token/${data?.address}`);
 						}}
 					>
 						复制链接

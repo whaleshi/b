@@ -645,7 +645,7 @@ export default function CreateForm() {
 						fullWidth
 						className="text-[14px] text-[#fff] bg-[#29254F] h-[48px] mt-[22px] rounded-[12px]"
 						onPress={() => {
-							copy(`https://bgbs.fun/token/${createdTokenAddress}`);
+							copy(`https://xboz.fun/token/${createdTokenAddress}`);
 						}}
 					>
 						复制链接
