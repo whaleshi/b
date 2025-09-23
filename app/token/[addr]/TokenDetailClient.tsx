@@ -20,6 +20,30 @@ interface TokenDetailClientProps {
 export default function TokenDetailClient({ address }: TokenDetailClientProps) {
 	const [tokenMetadata, setTokenMetadata] = useState<any>(null);
 
+	// 黑名单检查
+	const blacklist = ["0x2f4AbA8A2C5B05eBEde0f1A4bC6BDEA9d033b00C", "0x4cF7dEE78f01Af5ba6581A2B7A4b825E6F9d1c9f", "0xEf53B53EC0b02470C60Aa5C800318156E9Db769A"];
+	const isBlacklisted = blacklist.includes(address);
+
+	// 如果是黑名单地址，直接返回不存在页面
+	if (isBlacklisted) {
+		return (
+			<div className="w-full max-w-[450px] h-full pt-[56px] px-[16px]">
+				<div className="min-h-[calc(100vh-56px)] flex flex-col items-center justify-center">
+					<Image
+						src="/images/home/search.png"
+						className="w-[80px] h-[80px] !opacity-30"
+						disableSkeleton
+						loading="eager"
+					/>
+					<div className="text-[14px] text-[#fff] mt-[16px] mb-[8px]">代币不存在</div>
+					<div className="text-[12px] text-[#6A6784] text-center">
+						未找到该代币信息
+					</div>
+				</div>
+			</div>
+		);
+	}
+
 	// 获取 token 链上数据（3秒轮询）
 	const { data: tokenData, isLoading, error } = useQuery({
 		queryKey: ['tokenDetail', address],

@@ -151,8 +151,15 @@ export const useTokenList = () => {
                 }
             });
 
+            // 黑名单过滤
+            const blacklist = [
+                "0x2f4AbA8A2C5B05eBEde0f1A4bC6BDEA9d033b00C",
+                "0x4cF7dEE78f01Af5ba6581A2B7A4b825E6F9d1c9f",
+                "0xEf53B53EC0b02470C60Aa5C800318156E9Db769A",
+            ];
+            
             const validAddresses = addresses.filter(
-                (addr) => addr && addr !== ""
+                (addr) => addr && addr !== "" && !blacklist.includes(addr)
             );
             if (validAddresses.length === 0) {
                 return { tokenCount, tokens: [] };
