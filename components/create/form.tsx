@@ -265,6 +265,7 @@ export default function CreateForm() {
 				telegram: telegramVal
 			};
 			const res = await pinFileToIPFS(params, "json");
+			console.log(res)
 			if (!res) {
 				setCreateLoading(false);
 				return false;
