@@ -9,7 +9,7 @@ import ListItem from "@/components/home/item";
 import { useTokenList } from "@/hooks/useTokenList";
 
 export default function HomeList() {
-	const [activeTab, setActiveTab] = useState(1);
+	const [activeTab, setActiveTab] = useState(2);
 	const router = useRouter();
 	const { tokens, tokenMetadata, isLoading, getSortedTokenList } = useTokenList();
 
