@@ -15,6 +15,7 @@ import { parseEther, formatEther } from "viem";
 import { CONTRACT_CONFIG } from "@/config/chains";
 import { config } from "@/config/wagmi";
 import contractABI from "@/constant/TM.json";
+import swapABI from "@/constant/Swap.json";
 
 interface TradeProps {
     isOpen?: boolean;
@@ -39,7 +40,10 @@ export default function Trade({ isOpen = false, onOpenChange, initialMode = true
     const queryClient = useQueryClient();
 
     // 使用自定义trading hooks
-    const { handleBuy, handleSell } = useTokenTrading();
+    const { handleBuy, handleSell, handleSwapBuy, handleSwapSell } = useTokenTrading();
+    
+    // 根据 progress 判断使用内盘还是外盘
+    const isSwapMode = metaData?.progress >= 100;
     const { slippage } = useSlippageStore();
 
     // 如果没有传入balances，则自己查询余额
@@ -92,35 +96,69 @@ export default function Trade({ isOpen = false, onOpenChange, initialMode = true
     });
 
 
-    // 预估输出金额 - 当输入框有值时每3秒调用一次
+    // 预估输出金额 - 当输入框有值时每3秒调用一次，支持内盘和外盘
     const { data: estimatedOutput } = useQuery({
-        queryKey: ['estimateOutput', tokenAddress, inputAmount, isBuy, address],
+        queryKey: ['estimateOutput', tokenAddress, inputAmount, isBuy, address, isSwapMode],
         queryFn: async () => {
             if (!inputAmount || !tokenAddress || !isConnected || !address || parseFloat(inputAmount) <= 0) {
                 return '0';
             }
 
             try {
-                if (isBuy) {
-                    // 调用 tryBuy 获取预期代币输出
-                    const result = await readContract(config, {
-                        address: CONTRACT_CONFIG.FACTORY_CONTRACT as `0x${string}`,
-                        abi: contractABI,
-                        functionName: "tryBuy",
-                        args: [tokenAddress, parseEther(inputAmount)],
-                    }) as any[];
-                    const tokenAmountOut = result[0];
-                    return formatEther(tokenAmountOut);
+                if (isSwapMode) {
+                    // 外盘 Swap 预估
+                    if (isBuy) {
+                        // ETH -> Token：调用 getAmountsOut
+                        const path = [CONTRACT_CONFIG.WETH_ADDRESS, tokenAddress];
+                        const amountIn = parseEther(inputAmount);
+                        
+                        const amounts = await readContract(config, {
+                            address: CONTRACT_CONFIG.ROUTER_CONTRACT as `0x${string}`,
+                            abi: swapABI,
+                            functionName: "getAmountsOut",
+                            args: [amountIn, path],
+                        }) as bigint[];
+                        
+                        // amounts[1] 是输出的代币数量
+                        return formatEther(amounts[1]);
+                    } else {
+                        // Token -> ETH：调用 getAmountsOut
+                        const path = [tokenAddress, CONTRACT_CONFIG.WETH_ADDRESS];
+                        const amountIn = parseEther(inputAmount);
+                        
+                        const amounts = await readContract(config, {
+                            address: CONTRACT_CONFIG.ROUTER_CONTRACT as `0x${string}`,
+                            abi: swapABI,
+                            functionName: "getAmountsOut",
+                            args: [amountIn, path],
+                        }) as bigint[];
+                        
+                        // amounts[1] 是输出的 ETH 数量
+                        return formatEther(amounts[1]);
+                    }
                 } else {
-                    // 调用 trySell 获取预期ETH输出
-                    const sellAmount = parseEther(inputAmount);
-                    const result = await readContract(config, {
-                        address: CONTRACT_CONFIG.FACTORY_CONTRACT as `0x${string}`,
-                        abi: contractABI,
-                        functionName: "trySell",
-                        args: [tokenAddress, sellAmount],
-                    }) as bigint;
-                    return formatEther(result);
+                    // 内盘预估（原有逻辑）
+                    if (isBuy) {
+                        // 调用 tryBuy 获取预期代币输出
+                        const result = await readContract(config, {
+                            address: CONTRACT_CONFIG.FACTORY_CONTRACT as `0x${string}`,
+                            abi: contractABI,
+                            functionName: "tryBuy",
+                            args: [tokenAddress, parseEther(inputAmount)],
+                        }) as any[];
+                        const tokenAmountOut = result[0];
+                        return formatEther(tokenAmountOut);
+                    } else {
+                        // 调用 trySell 获取预期ETH输出
+                        const sellAmount = parseEther(inputAmount);
+                        const result = await readContract(config, {
+                            address: CONTRACT_CONFIG.FACTORY_CONTRACT as `0x${string}`,
+                            abi: contractABI,
+                            functionName: "trySell",
+                            args: [tokenAddress, sellAmount],
+                        }) as bigint;
+                        return formatEther(result);
+                    }
                 }
             } catch (error) {
                 console.error('预估输出失败:', error);
@@ -230,11 +268,25 @@ export default function Trade({ isOpen = false, onOpenChange, initialMode = true
             const currentTokenAddress = tokenAddress as string;
 
             if (isBuy) {
-                await handleBuy(currentTokenAddress, inputAmount);
-                toast.success(`买入成功`, { icon: null });
+                if (isSwapMode) {
+                    // 外盘 Swap 买入
+                    await handleSwapBuy(currentTokenAddress, inputAmount);
+                    toast.success(`外盘买入成功`, { icon: null });
+                } else {
+                    // 内盘买入
+                    await handleBuy(currentTokenAddress, inputAmount);
+                    toast.success(`内盘买入成功`, { icon: null });
+                }
             } else {
-                await handleSell(currentTokenAddress, inputAmount);
-                toast.success(`卖出成功`, { icon: null });
+                if (isSwapMode) {
+                    // 外盘 Swap 卖出
+                    await handleSwapSell(currentTokenAddress, inputAmount);
+                    toast.success(`外盘卖出成功`, { icon: null });
+                } else {
+                    // 内盘卖出
+                    await handleSell(currentTokenAddress, inputAmount);
+                    toast.success(`内盘卖出成功`, { icon: null });
+                }
             }
 
             await queryClient.invalidateQueries({

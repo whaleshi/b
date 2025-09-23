@@ -102,9 +102,6 @@ export default function ListItem({ tokenAddress, tokenMetadata, progress = 10 }:
 				<div className="text-[12px] text-[#6A6784] my-[2px]">
 					MC <span className="text-[#fff]">$--</span> 内盘 <span className="text-[#fff]">{progress.toFixed(2)}%</span>
 				</div>
-				<div className="text-[12px] text-[#6A6784]">
-					{/* {tokenMetadata?.description || tokenMetadata?.name || 'Token Description'} */}
-				</div>
 				<div className="flex items-center gap-[4px]">
 					{
 						tokenMetadata?.website && <div className="w-[20px] h-[20px] flex items-center justify-center cursor-pointer"

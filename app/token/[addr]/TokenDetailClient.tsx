@@ -125,7 +125,7 @@ export default function TokenDetailClient({ address }: TokenDetailClientProps) {
 			setTokenMetadata({
 				name: metadata.name || `Token ${address.slice(0, 6)}...${address.slice(-4)}`,
 				symbol: metadata.symbol || 'UNKNOWN',
-				description: metadata.description || 'Token Description',
+				description: metadata.description,
 				image: metadata.image || '/images/common/default.png',
 				website: metadata.website || '',
 				x: metadata.x || '',
@@ -191,7 +191,7 @@ export default function TokenDetailClient({ address }: TokenDetailClientProps) {
 		...tokenData,
 		name: tokenMetadata?.name || `Token ${address.slice(0, 6)}...${address.slice(-4)}`,
 		symbol: tokenMetadata?.symbol || 'UNKNOWN',
-		description: tokenMetadata?.description || 'Token Description',
+		description: tokenMetadata?.description,
 		image: tokenMetadata?.image || '/images/common/default.png',
 		tokenImage: tokenMetadata?.image || '/images/common/default.png',
 		website: tokenMetadata?.website || '',
