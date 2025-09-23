@@ -19,11 +19,11 @@ const customNetwork = defineChain({
 });
 
 export const config = createConfig({
-    chains: [customNetwork],
+    chains: [xLayer],
     connectors: [injected({ shimDisconnect: true })],
     transports: {
-        // [morphHolesky.id]: http(),
-        [customNetwork.id]: http("http://43.160.204.41:8545"),
+        [xLayer.id]: http(),
+        // [customNetwork.id]: http("http://43.160.204.41:8545"),
     },
     ssr: false,
 });

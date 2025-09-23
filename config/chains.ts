@@ -19,10 +19,10 @@ const customNetwork = defineChain({
 // 网络配置 - 只需要在这里修改，其他地方会自动更新
 export const CHAINS_CONFIG = {
     // 默认链 - 修改这里即可切换整个应用的默认网络
-    DEFAULT_CHAIN: customNetwork,
+    DEFAULT_CHAIN: xLayer,
 
     // 支持的链列表 - 按优先级排序
-    SUPPORTED_CHAINS: [morphHolesky, xLayer, customNetwork],
+    SUPPORTED_CHAINS: [xLayer],
 
     // 链相关配置
     CHAIN_CONFIG: {
@@ -64,8 +64,8 @@ export const getCurrentChainConfig = () => ({
 // 合约地址配置
 export const CONTRACT_CONFIG = {
     // 工厂合约地址 - 用于创建新代币
-    FACTORY_CONTRACT: "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1" as const,
-    ROUTER_CONTRACT: "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0" as const,
+    FACTORY_CONTRACT: "0x3c609DACA9867309b3170d109486f37EBaE0B6a6" as const,
+    ROUTER_CONTRACT: "0xe820A21fABA2e9a22d1f0240Af6Bd20B32c68a34" as const,
     WETH_ADDRESS: "0xe538905cf8410324e03A5A23C1c177a474D59b2b" as const,
 } as const;
 
