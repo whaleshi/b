@@ -9,7 +9,7 @@ import {
     MULTICALL3_ABI,
 } from "@/config/chains";
 import { config } from "@/config/wagmi";
-import contractABI from "@/constant/abi.json";
+import contractABI from "@/constant/TM.json";
 
 interface TokenInfo {
     base: string;
@@ -158,7 +158,7 @@ export const useTokenList = () => {
                 return { tokenCount, tokens: [] };
             }
 
-            // 批量获取 URI 和 tokensInfo
+            // 批量获取 URI 和 coinInfo
             const dataCalls = [];
             for (const address of validAddresses) {
                 // URI 调用
@@ -171,13 +171,13 @@ export const useTokenList = () => {
                         args: [address],
                     }),
                 });
-                // tokensInfo 调用
+                // coinInfo 调用
                 dataCalls.push({
                     target: CONTRACT_CONFIG.FACTORY_CONTRACT,
                     allowFailure: true,
                     callData: encodeFunctionData({
                         abi: contractABI,
-                        functionName: "tokensInfo",
+                        functionName: "coinInfo",
                         args: [address],
                     }),
                 });
@@ -194,6 +194,7 @@ export const useTokenList = () => {
                 functionName: "aggregate3",
                 args: [dataCalls],
             })) as any[];
+            console.log("Data results from multicall=====:", dataResults);
 
             // 解析结果并组合成完整的token数组
             const tokens = validAddresses.map((address, index) => {
@@ -218,13 +219,13 @@ export const useTokenList = () => {
                     }
                 }
 
-                // 解析 tokensInfo
+                // 解析 coinInfo
                 let tokenInfo = null;
                 if (dataResults[infoIndex]?.success) {
                     try {
                         const tokenInfoResult = decodeFunctionResult({
                             abi: contractABI,
-                            functionName: "tokensInfo",
+                            functionName: "coinInfo",
                             data: dataResults[infoIndex].returnData,
                         }) as any[];
                         tokenInfo = {
@@ -243,7 +244,7 @@ export const useTokenList = () => {
                         };
                     } catch (error) {
                         console.warn(
-                            `Failed to decode tokensInfo for token ${address}:`,
+                            `Failed to decode coinInfo for token ${address}:`,
                             error
                         );
                     }

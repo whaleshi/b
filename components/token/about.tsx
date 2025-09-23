@@ -11,17 +11,16 @@ export default function TokenAbout({ data }: any) {
 			<div className="h-[64px] w-full flex items-center gap-[12px]">
 				<div className="relative w-[64px] h-[64px]">
 					<div className="absolute top-[2px] left-[2px] right-[2px] bottom-[2px] border-[2px] border-[#29254F] rounded-[8px] z-10">
-						{/* 默认图片作为背景/loading */}
-						<Image
-							src="/images/common/default.png"
-							className="w-[56px] h-[56px] rounded-[8px] border-[2px] border-[#29254F] absolute"
-							disableSkeleton
-						/>
-						{/* 实际token图片 */}
-						{data?.tokenImage && (
+						{data?.tokenImage ? (
 							<Image
 								src={data.tokenImage}
 								className="w-[56px] h-[56px] rounded-[8px] border-[2px] border-[#29254F] absolute z-10"
+								disableSkeleton
+							/>
+						) : (
+							<Image
+								src="/images/common/default.png"
+								className="w-[56px] h-[56px] rounded-[8px] border-[2px] border-[#29254F] absolute"
 								disableSkeleton
 							/>
 						)}

@@ -18,7 +18,7 @@ export default function HomeList() {
 
 	// 根据当前tab获取排序后的tokens
 	const sortedTokens = getSortedTokenList(tokens, activeTab - 1); // activeTab是1,2,3，函数需要0,1,2
-
+	console.log('sortedTokens', sortedTokens);
 	const handleSearchClick = () => {
 		router.push('/search');
 	};

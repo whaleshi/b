@@ -10,6 +10,7 @@ import { parseEther, formatEther } from "viem";
 import { CONTRACT_CONFIG } from "@/config/chains";
 import { useSlippageStore } from "@/stores/useSlippageStore";
 import { config } from "@/config/wagmi";
+import contractABI from "@/constant/TM.json";
 
 export interface BuyResult {
     txHash: string;
@@ -41,7 +42,6 @@ export const useTokenTrading = () => {
             throw new Error("Please connect wallet first");
         }
 
-        const contractABI = (await import("@/constant/abi.json")).default;
         const amount = parseEther(ethAmount);
 
         console.log("Calling tryBuy with parameters:");
@@ -79,12 +79,14 @@ export const useTokenTrading = () => {
         const walletBalance = await getBalance(config, {
             address: address as `0x${string}`,
         });
-        
+
         console.log("钱包余额:", formatEther(walletBalance.value), "OKB");
         console.log("购买金额:", formatEther(amount), "OKB");
-        
+
         if (walletBalance.value < amount) {
-            throw new Error(`Insufficient balance. You have ${formatEther(walletBalance.value)} OKB but trying to spend ${formatEther(amount)} OKB`);
+            throw new Error(
+                `Insufficient balance. You have ${formatEther(walletBalance.value)} OKB but trying to spend ${formatEther(amount)} OKB`
+            );
         }
 
         // 4. 估算 gas limit
@@ -119,7 +121,7 @@ export const useTokenTrading = () => {
         const buyResult = await writeContract(config, {
             address: CONTRACT_CONFIG.FACTORY_CONTRACT as `0x${string}`,
             abi: contractABI,
-            functionName: "buyToken",
+            functionName: "purchase",
             args: [tokenAddress, amount, minAmountOut],
             value: amount,
             gas: gasLimit,
@@ -143,28 +145,68 @@ export const useTokenTrading = () => {
         tokenAmount: string
     ): Promise<SellResult> => {
         console.log("=== 卖出操作 ===");
-
+        console.log(1);
         if (!isConnected || !address) {
+            console.log("请先连接钱包");
             throw new Error("Please connect wallet first");
         }
-
-        const contractABI = (await import("@/constant/abi.json")).default;
+        console.log(2);
         const tokenABI = [
-            "function balanceOf(address owner) view returns (uint256)",
-            "function approve(address spender, uint256 amount) returns (bool)",
-            "function allowance(address owner, address spender) view returns (uint256)",
+            {
+                "constant": true,
+                "inputs": [{"name": "_owner", "type": "address"}],
+                "name": "balanceOf",
+                "outputs": [{"name": "balance", "type": "uint256"}],
+                "type": "function"
+            },
+            {
+                "constant": false,
+                "inputs": [
+                    {"name": "_spender", "type": "address"},
+                    {"name": "_value", "type": "uint256"}
+                ],
+                "name": "approve",
+                "outputs": [{"name": "", "type": "bool"}],
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [
+                    {"name": "_owner", "type": "address"},
+                    {"name": "_spender", "type": "address"}
+                ],
+                "name": "allowance",
+                "outputs": [{"name": "", "type": "uint256"}],
+                "type": "function"
+            }
         ];
 
         // 1. 获取代币余额
-        const balance = (await readContract(config, {
-            address: tokenAddress as `0x${string}`,
-            abi: tokenABI,
-            functionName: "balanceOf",
-            args: [address],
-        })) as bigint;
-
-        console.log("代币余额:", balance.toString());
-        console.log("要卖出的数量:", tokenAmount);
+        console.log("开始获取代币余额...");
+        console.log("代币地址:", tokenAddress);
+        console.log("用户地址:", address);
+        
+        let balance: bigint;
+        try {
+            balance = (await readContract(config, {
+                address: tokenAddress as `0x${string}`,
+                abi: tokenABI,
+                functionName: "balanceOf",
+                args: [address],
+            })) as bigint;
+            
+            console.log("成功获取代币余额:", balance.toString());
+            console.log("要卖出的数量:", tokenAmount);
+            
+        } catch (error) {
+            console.error("获取代币余额失败:", error);
+            console.error("错误详情:", {
+                tokenAddress,
+                address,
+                errorMessage: error instanceof Error ? error.message : String(error)
+            });
+            throw new Error(`Failed to get token balance: ${error instanceof Error ? error.message : String(error)}`);
+        }
 
         if (balance === BigInt(0)) {
             throw new Error("Insufficient balance");
@@ -285,7 +327,7 @@ export const useTokenTrading = () => {
         const sellTxResult = await writeContract(config, {
             address: CONTRACT_CONFIG.FACTORY_CONTRACT as `0x${string}`,
             abi: contractABI,
-            functionName: "sellToken",
+            functionName: "sell",
             args: [tokenAddress, sellAmount, minEthOut],
             gas: sellGasLimit,
             gasPrice: newGasPrice,

@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { readContract } from "@wagmi/core";
 import { config } from "@/config/wagmi";
 import { CONTRACT_CONFIG } from "@/config/chains";
-import contractABI from "@/constant/abi.json";
+import contractABI from "@/constant/TM.json";
 import _bignumber from "bignumber.js";
 import { Image } from "@heroui/react";
 import { useCallback, useState, useEffect } from "react";
@@ -25,7 +25,7 @@ export default function TokenDetailClient({ address }: TokenDetailClientProps) {
 		queryKey: ['tokenDetail', address],
 		queryFn: async () => {
 			try {
-				// 获取 URI 和 tokensInfo
+				// 获取 URI 和 coinInfo
 				const [uri, tokenInfoResult] = await Promise.all([
 					readContract(config, {
 						address: CONTRACT_CONFIG.FACTORY_CONTRACT as `0x${string}`,
@@ -36,7 +36,7 @@ export default function TokenDetailClient({ address }: TokenDetailClientProps) {
 					readContract(config, {
 						address: CONTRACT_CONFIG.FACTORY_CONTRACT as `0x${string}`,
 						abi: contractABI,
-						functionName: "tokensInfo",
+						functionName: "coinInfo",
 						args: [address],
 					}) as Promise<any[]>
 				]);

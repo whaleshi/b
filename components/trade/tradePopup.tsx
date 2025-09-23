@@ -14,7 +14,7 @@ import { readContract, getBalance } from "@wagmi/core";
 import { parseEther, formatEther } from "viem";
 import { CONTRACT_CONFIG } from "@/config/chains";
 import { config } from "@/config/wagmi";
-import contractABI from "@/constant/abi.json";
+import contractABI from "@/constant/TM.json";
 
 interface TradeProps {
     isOpen?: boolean;

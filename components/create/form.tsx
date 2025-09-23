@@ -4,12 +4,20 @@ import { useRouter } from "next/navigation";
 import ResponsiveDialog from "@/components/modal";
 import pinFileToIPFS from "@/utils/pinata";
 import { toast } from "sonner";
-import { ethers } from "ethers";
 import { useAccount } from 'wagmi';
+import {
+	writeContract,
+	getBalance,
+	estimateGas,
+	getGasPrice,
+	readContract
+} from "@wagmi/core";
+import { parseEther, formatEther } from "viem";
 import { useConnectModal } from '@rainbow-me/rainbowkit';
-import FactoryABIData from "@/constant/abi.json";
+import FactoryABIData from "@/constant/TM.json";
 const FactoryABI = FactoryABIData;
-import { CONTRACT_CONFIG, DEFAULT_CHAIN_CONFIG } from "@/config/chains";
+import { CONTRACT_CONFIG } from "@/config/chains";
+import { config } from "@/config/wagmi";
 import { randomBytes } from "crypto";
 import useClipboard from '@/hooks/useClipboard';
 
@@ -274,94 +282,102 @@ export default function CreateForm() {
 			if (!isConnected || !address) {
 				throw new Error('Please connect wallet first');
 			}
-			// Browser provider (assumes injected wallet like MetaMask)
-			if (typeof window === 'undefined' || !(window as any).ethereum) {
-				throw new Error('No injected provider');
-			}
-			const injected = (window as any).ethereum;
-			const ethersProvider = new ethers.BrowserProvider(injected as any);
-			const signer = await ethersProvider.getSigner();
-			// read only provider
-			const provider = new ethers.JsonRpcProvider(DEFAULT_CHAIN_CONFIG.rpcUrl);
 
 			console.log("使用地址:", address);
 
 			// 检查余额
-			const balance = await ethersProvider.getBalance(address);
-			console.log("账户余额:", ethers.formatEther(balance), "OKB");
+			const walletBalance = await getBalance(config, {
+				address: address as `0x${string}`,
+			});
 
-			if (balance === BigInt(0)) {
+			console.log("账户余额:", formatEther(walletBalance.value), "ETH");
+
+			if (walletBalance.value === BigInt(0)) {
 				toast.error('余额不足', { icon: null });
 				return null;
 			}
 
 			const salt = randomBytes(32).toString("hex");
-			const factoryContract = new ethers.Contract(factoryAddr, FactoryABI, signer);
 
 			// 检查是否有提前购买金额
 			const hasPreBuy = preBuyVal && parseFloat(preBuyVal) > 0;
-			const preBuyAmount = hasPreBuy ? ethers.parseEther(preBuyVal) : BigInt(0);
+			const preBuyAmount = hasPreBuy ? parseEther(preBuyVal) : BigInt(0);
+
+			// 检查余额是否足够支付预购金额
+			if (hasPreBuy && walletBalance.value < preBuyAmount) {
+				toast.error(`余额不足。您有 ${formatEther(walletBalance.value)} ETH，但尝试花费 ${formatEther(preBuyAmount)} ETH`, { icon: null });
+				return null;
+			}
 
 			// 估算 gas
 			let gasLimit;
 			try {
-				let estimatedGas;
-				if (hasPreBuy) {
-					estimatedGas = await factoryContract.createTokenAndBuy.estimateGas(
-						nameVal, ticker, metadataHash, salt, preBuyAmount,
-						{ value: preBuyAmount }
-					);
-				} else {
-					estimatedGas = await factoryContract.createToken.estimateGas(nameVal, ticker, metadataHash, salt);
-				}
-				gasLimit = estimatedGas + (estimatedGas * BigInt(20)) / BigInt(100); // +20% buffer
+				const estimatedGas = await estimateGas(config, {
+					to: factoryAddr as `0x${string}`,
+					data: `0x`, // wagmi 会自动处理函数调用数据
+					value: hasPreBuy ? preBuyAmount : undefined,
+				});
+				gasLimit = (estimatedGas * BigInt(120)) / BigInt(100); // +20% buffer
+				console.log("预估 Gas Limit:", gasLimit.toString());
 			} catch (e) {
+				console.warn("Gas 估算失败:", e);
 				gasLimit = undefined;
 			}
 
-			// 获取 gas price（+5%）并强制使用 Legacy 交易类型
-			const feeData = await ethersProvider.getFeeData();
-			const gasPrice = feeData.gasPrice;
-			const newGasPrice = gasPrice ? gasPrice + (gasPrice * BigInt(5)) / BigInt(100) : null; // +5%
+			// 获取 gas price
+			const gasPrice = await getGasPrice(config);
+			const newGasPrice = gasPrice
+				? gasPrice + (gasPrice * BigInt(5)) / BigInt(100)
+				: undefined; // +5%
 
-			// 统一交易选项
-			const txOptions: any = {
-				// type: 0, // 强制使用 Legacy 交易类型
-			};
-			if (gasLimit) txOptions.gasLimit = gasLimit;
-			if (newGasPrice) txOptions.gasPrice = newGasPrice;
-			if (hasPreBuy) txOptions.value = preBuyAmount;
+			console.log("Gas Price:", {
+				original: gasPrice?.toString(),
+				new: newGasPrice?.toString(),
+			});
 
-			let tx;
-			try {
-				if (hasPreBuy) {
-					tx = await factoryContract.createTokenAndBuy(
-						nameVal,
-						ticker,
-						metadataHash,
-						salt,
-						preBuyAmount,
-						txOptions
-					);
-				} else {
-					tx = await factoryContract.createToken(
-						nameVal,
-						ticker,
-						metadataHash,
-						salt,
-						txOptions
-					);
-				}
-			} catch (error: any) {
-				throw error;
+			// 执行创建代币交易
+			console.log("发送创建代币交易...");
+			console.log("参数:", {
+				name: nameVal,
+				ticker,
+				metadataHash,
+				salt,
+				preBuyAmount: hasPreBuy ? preBuyAmount.toString() : "0"
+			});
+
+			let txHash;
+			if (hasPreBuy) {
+				txHash = await writeContract(config, {
+					address: factoryAddr as `0x${string}`,
+					abi: FactoryABI,
+					functionName: "createCoinAndBuy",
+					args: [nameVal, ticker, metadataHash, salt, preBuyAmount],
+					value: preBuyAmount,
+					gas: gasLimit,
+					gasPrice: newGasPrice,
+					type: "legacy" as const,
+				});
+			} else {
+				txHash = await writeContract(config, {
+					address: factoryAddr as `0x${string}`,
+					abi: FactoryABI,
+					functionName: "createCoin",
+					args: [nameVal, ticker, metadataHash, salt],
+					gas: gasLimit,
+					gasPrice: newGasPrice,
+					type: "legacy" as const,
+				});
 			}
 
-			// 等待交易确认
-			const receipt = await tx.wait();
+			console.log("创建代币交易已发送:", txHash);
 
-			// 计算新创建的代币地址
-			const readOnlyContract = new ethers.Contract(factoryAddr, FactoryABI, provider);
-			const tokenAddress = await readOnlyContract.predictTokenAddress(salt);
+			// 使用 readContract 计算新创建的代币地址
+			const tokenAddress = await readContract(config, {
+				address: factoryAddr as `0x${string}`,
+				abi: FactoryABI,
+				functionName: "predictTokenAddress",
+				args: [salt],
+			});
 
 			return tokenAddress;
 		} catch (error: any) {

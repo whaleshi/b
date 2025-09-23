@@ -1,12 +1,28 @@
-import { xLayer } from "wagmi/chains";
+import { xLayer, morphHolesky } from "wagmi/chains";
+import { defineChain } from "viem";
+
+const customNetwork = defineChain({
+    id: 31337,
+    name: "Custom Network",
+    nativeCurrency: {
+        decimals: 18,
+        name: "Ether",
+        symbol: "ETH",
+    },
+    rpcUrls: {
+        default: {
+            http: ["http://43.160.204.41:8545"],
+        },
+    },
+});
 
 // 网络配置 - 只需要在这里修改，其他地方会自动更新
 export const CHAINS_CONFIG = {
     // 默认链 - 修改这里即可切换整个应用的默认网络
-    DEFAULT_CHAIN: xLayer,
+    DEFAULT_CHAIN: customNetwork,
 
     // 支持的链列表 - 按优先级排序
-    SUPPORTED_CHAINS: [xLayer],
+    SUPPORTED_CHAINS: [morphHolesky, xLayer, customNetwork],
 
     // 链相关配置
     CHAIN_CONFIG: {
@@ -15,6 +31,18 @@ export const CHAINS_CONFIG = {
             symbol: "OKB",
             explorerUrl: "https://www.oklink.com/xlayer",
             rpcUrl: "https://rpc.xlayer.tech",
+        },
+        [morphHolesky.id]: {
+            name: "Morph Holesky",
+            symbol: "ETH",
+            explorerUrl: "https://explorer-holesky.morphl2.io",
+            rpcUrl: "https://rpc-quicknode-holesky.morphl2.io",
+        },
+        [customNetwork.id]: {
+            name: "Custom Network",
+            symbol: "ETH",
+            explorerUrl: "",
+            rpcUrl: "http://43.160.204.41:8545",
         },
     },
 } as const;
@@ -36,7 +64,9 @@ export const getCurrentChainConfig = () => ({
 // 合约地址配置
 export const CONTRACT_CONFIG = {
     // 工厂合约地址 - 用于创建新代币
-    FACTORY_CONTRACT: "0xC012e2f925FCF089e1059eBD28fa12CFbBEE8477" as const,
+    FACTORY_CONTRACT: "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1" as const,
+    ROUTER_CONTRACT: "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0" as const,
+    WETH_ADDRESS: "0xe538905cf8410324e03A5A23C1c177a474D59b2b" as const,
 } as const;
 
 // Multicall3 合约地址 (通用地址，大多数链都支持)
