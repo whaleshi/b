@@ -41,7 +41,7 @@ export default function Trade({ isOpen = false, onOpenChange, initialMode = true
 
     // 使用自定义trading hooks
     const { handleBuy, handleSell, handleSwapBuy, handleSwapSell } = useTokenTrading();
-    
+
     // 根据 progress 判断使用内盘还是外盘
     const isSwapMode = metaData?.progress >= 100;
     const { slippage } = useSlippageStore();
@@ -111,28 +111,28 @@ export default function Trade({ isOpen = false, onOpenChange, initialMode = true
                         // ETH -> Token：调用 getAmountsOut
                         const path = [CONTRACT_CONFIG.WETH_ADDRESS, tokenAddress];
                         const amountIn = parseEther(inputAmount);
-                        
+
                         const amounts = await readContract(config, {
                             address: CONTRACT_CONFIG.ROUTER_CONTRACT as `0x${string}`,
                             abi: swapABI,
                             functionName: "getAmountsOut",
                             args: [amountIn, path],
                         }) as bigint[];
-                        
+
                         // amounts[1] 是输出的代币数量
                         return formatEther(amounts[1]);
                     } else {
                         // Token -> ETH：调用 getAmountsOut
                         const path = [tokenAddress, CONTRACT_CONFIG.WETH_ADDRESS];
                         const amountIn = parseEther(inputAmount);
-                        
+
                         const amounts = await readContract(config, {
                             address: CONTRACT_CONFIG.ROUTER_CONTRACT as `0x${string}`,
                             abi: swapABI,
                             functionName: "getAmountsOut",
                             args: [amountIn, path],
                         }) as bigint[];
-                        
+
                         // amounts[1] 是输出的 ETH 数量
                         return formatEther(amounts[1]);
                     }
@@ -365,8 +365,8 @@ export default function Trade({ isOpen = false, onOpenChange, initialMode = true
                     <Button
                         key={amount.label}
                         radius="none"
-                        fullWidth
-                        className="bg-[rgba(255,255,255,0.05)] text-[#FFF] rounded-[12px] text-[12px]"
+                        // fullWidth
+                        className="bg-[rgba(255,255,255,0.05)] min-w-[10px] flex-1 text-[#FFF] rounded-[12px] text-[12px]"
                         disabled={isLoading}
                         onPress={() => handleAmountClick(amount)}
                     >
