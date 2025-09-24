@@ -37,7 +37,7 @@ export const Navbar = () => {
             maxWidth="xl"
             position="static"
             classNames={{
-                wrapper: "px-4 h-[56px] bg-transparent"
+                wrapper: "px-4 h-[56px] bg-transparent gap-[0]"
             }}
             style={{
                 backgroundColor: isScrolled ? '#1E1946' : 'transparent',
@@ -61,12 +61,12 @@ export const Navbar = () => {
             <NavbarContent className="basis-1/5 sm:basis-full gap-[10px]" justify="end">
                 <NavbarItem>
                     <NextLink href="https://x.com/bozdotfun" target="_blank" rel="noopener noreferrer" className="flex items-center">
-                        <img src="/images/home/x.png" alt="X" className="w-[36px] h-[36px]" loading="eager" />
+                        <img src="/images/home/x.png" alt="X" className="w-[36px] h-[36px] shrink-0" loading="eager" />
                     </NextLink>
                 </NavbarItem>
                 <NavbarItem>
                     <NextLink href="https://t.me/xbozdotfun" target="_blank" rel="noopener noreferrer" className="flex items-center">
-                        <img src="/images/home/tg.png" alt="Telegram" className="w-[36px] h-[36px]" loading="eager" />
+                        <img src="/images/home/tg.png" alt="Telegram" className="w-[36px] h-[36px] shrink-0" loading="eager" />
                     </NextLink>
                 </NavbarItem>
                 <NavbarItem suppressHydrationWarning>
@@ -83,7 +83,7 @@ export const Navbar = () => {
                     ) : (
                         <button
                             type="button"
-                            className="w-[96px] h-[36px] rounded-[12px] bg-[#fff] active:scale-[0.97] text-[13px] font-medium text-[#001825] flex items-center justify-center transition-colors"
+                            className="h-[36px] rounded-[12px] bg-[#fff] active:scale-[0.97] text-[13px] font-medium text-[#001825] flex items-center justify-center transition-colors px-[16px] min-w-[40px]"
                             onClick={() => openConnectModal && openConnectModal()}
                         >
                             连接钱包
