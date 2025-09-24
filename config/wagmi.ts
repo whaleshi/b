@@ -1,5 +1,5 @@
 import { createConfig, http } from "wagmi";
-import { injected } from "wagmi/connectors";
+import { injected, walletConnect, coinbaseWallet } from "wagmi/connectors";
 import { xLayer, morphHolesky } from "wagmi/chains";
 import { defineChain } from "viem";
 
@@ -20,7 +20,15 @@ import { defineChain } from "viem";
 
 export const config = createConfig({
     chains: [xLayer],
-    connectors: [injected({ shimDisconnect: true })],
+    connectors: [
+        injected({ shimDisconnect: true }),
+        walletConnect({
+            projectId: "cf29fa9397c7812afa53a3e0cdaf5764",
+        }),
+        coinbaseWallet({
+            appName: "xboz.fun",
+        }),
+    ],
     transports: {
         [xLayer.id]: http(),
     },
