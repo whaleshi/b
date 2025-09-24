@@ -47,13 +47,14 @@ export const Navbar = () => {
             className="fixed top-0 left-0 right-0 z-50 bg-transparent"
         >
             <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
-                <NavbarBrand as="li" className="gap-3 max-w-fit">
+                <NavbarBrand as="li" className="gap-[4px] max-w-fit">
                     <NextLink
-                        className="flex justify-start items-center gap-3"
+                        className="flex justify-start items-center gap-[4px]"
                         href="/"
                     >
                         <img src="/images/home/logo.png" alt="XBOZ Logo" className="w-9 h-9" loading="eager" />
-                        <div className="font-bold text-[18px] pt-[2px] text-white">XBOZ.FUN</div>
+                        <div className="block md:hidden font-bold text-[18px] pt-[2px] text-white">XBOZ</div>
+                        <div className="hidden md:block font-bold text-[18px] pt-[2px] text-white">XBOZ.FUN</div>
                     </NextLink>
                 </NavbarBrand>
             </NavbarContent>
