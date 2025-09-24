@@ -39,7 +39,11 @@ export function HeroUIProviderWrapper({ children, themeProps }: HeroUIProviderPr
     return (
         <WagmiProvider config={config}>
             <QueryClientProvider client={queryClient}>
-                <RainbowKitProvider theme={darkTheme()}>
+                <RainbowKitProvider
+                    theme={darkTheme()}
+                    // modalSize="compact"
+                    showRecentTransactions={true}
+                >
                     <HeroUIProvider navigate={router.push}>
                         <NextThemesProvider {...themeProps}>{children}</NextThemesProvider>
                     </HeroUIProvider>

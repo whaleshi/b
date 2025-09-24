@@ -1,7 +1,7 @@
-import { createConfig, http } from "wagmi";
-import { injected, walletConnect, coinbaseWallet } from "wagmi/connectors";
+import { http } from "wagmi";
 import { xLayer, morphHolesky } from "wagmi/chains";
 import { defineChain } from "viem";
+import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 
 // const customNetwork = defineChain({
 //     id: 31337,
@@ -18,17 +18,10 @@ import { defineChain } from "viem";
 //     },
 // });
 
-export const config = createConfig({
+export const config = getDefaultConfig({
+    appName: 'xboz.fun',
+    projectId: 'cf29fa9397c7812afa53a3e0cdaf5764',
     chains: [xLayer],
-    connectors: [
-        injected({ shimDisconnect: true }),
-        walletConnect({
-            projectId: "cf29fa9397c7812afa53a3e0cdaf5764",
-        }),
-        coinbaseWallet({
-            appName: "xboz.fun",
-        }),
-    ],
     transports: {
         [xLayer.id]: http(),
     },
